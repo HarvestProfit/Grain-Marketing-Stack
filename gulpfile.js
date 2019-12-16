@@ -23,7 +23,8 @@ const autoprefixer = require('gulp-autoprefixer'),
   sourcemaps = require('gulp-sourcemaps'),
   themeYaml = './theme.yml',
   year = new Date().getFullYear(),
-  yaml = require('yamljs');
+  yaml = require('yamljs'),
+  gulpGhPages = require('gulp-gh-pages');
 
 let copyDeps = yaml.load(copyDepsYaml);
 let theme = yaml.load(themeYaml);
@@ -375,6 +376,11 @@ gulp.task('watch', function (done) {
   done();
   // End watch task
 
+});
+
+gulp.task('deploy', function() {
+  return gulp.src("./dist/**/*")
+    .pipe(gulpGhPages())
 });
 
 gulp.task('default', gulp.series('clean:dist', 'copy-assets', gulp.series('html', 'sass', 'sass-min', 'bootstrapjs', 'mrarejs'), gulp.series('serve', 'watch')));
