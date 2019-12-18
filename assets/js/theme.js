@@ -1198,7 +1198,7 @@
   }
 
   var flatpickr = createCommonjsModule(function (module, exports) {
-  /* flatpickr v4.6.3, @license MIT */
+  /* flatpickr v4.6.1, @license MIT */
   (function (global, factory) {
        module.exports = factory() ;
   }(commonjsGlobal, function () {
@@ -1287,7 +1287,6 @@
           locale: "default",
           minuteIncrement: 5,
           mode: "single",
-          monthSelectorType: "dropdown",
           nextArrow: "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 17 17'><g></g><path d='M13.207 8.472l-7.854 7.854-0.707-0.707 7.146-7.146-7.146-7.148 0.707-0.707 7.854 7.854z' /></svg>",
           noCalendar: false,
           now: new Date(),
@@ -1381,8 +1380,6 @@
           toggleTitle: "Click to toggle",
           amPM: ["AM", "PM"],
           yearAriaLabel: "Year",
-          hourAriaLabel: "Hour",
-          minuteAriaLabel: "Minute",
           time_24hr: false
       };
 
@@ -2345,8 +2342,7 @@
               }
           }
           function buildMonthSwitch() {
-              if (self.config.showMonths > 1 ||
-                  self.config.monthSelectorType !== "dropdown")
+              if (self.config.showMonths > 1)
                   return;
               var shouldBuildMonth = function (month) {
                   if (self.config.minDate !== undefined &&
@@ -2365,7 +2361,7 @@
                       continue;
                   var month = createElement("option", "flatpickr-monthDropdown-month");
                   month.value = new Date(self.currentYear, i).getMonth().toString();
-                  month.textContent = monthToStr(i, self.config.shorthandCurrentMonth, self.l10n);
+                  month.textContent = monthToStr(i, false, self.l10n);
                   month.tabIndex = -1;
                   if (self.currentMonth === i) {
                       month.selected = true;
@@ -2377,8 +2373,7 @@
               var container = createElement("div", "flatpickr-month");
               var monthNavFragment = window.document.createDocumentFragment();
               var monthElement;
-              if (self.config.showMonths > 1 ||
-                  self.config.monthSelectorType === "static") {
+              if (self.config.showMonths > 1) {
                   monthElement = createElement("span", "cur-month");
               }
               else {
@@ -2468,13 +2463,9 @@
               self.timeContainer = createElement("div", "flatpickr-time");
               self.timeContainer.tabIndex = -1;
               var separator = createElement("span", "flatpickr-time-separator", ":");
-              var hourInput = createNumberInput("flatpickr-hour", {
-                  "aria-label": self.l10n.hourAriaLabel
-              });
+              var hourInput = createNumberInput("flatpickr-hour");
               self.hourElement = hourInput.getElementsByTagName("input")[0];
-              var minuteInput = createNumberInput("flatpickr-minute", {
-                  "aria-label": self.l10n.minuteAriaLabel
-              });
+              var minuteInput = createNumberInput("flatpickr-minute");
               self.minuteElement = minuteInput.getElementsByTagName("input")[0];
               self.hourElement.tabIndex = self.minuteElement.tabIndex = -1;
               self.hourElement.value = pad(self.latestSelectedDateObj
@@ -2533,9 +2524,6 @@
               return self.weekdayContainer;
           }
           function updateWeekdays() {
-              if (!self.weekdayContainer) {
-                  return;
-              }
               var firstDayOfWeek = self.l10n.firstDayOfWeek;
               var weekdays = self.l10n.weekdays.shorthand.slice();
               if (firstDayOfWeek > 0 && firstDayOfWeek < weekdays.length) {
@@ -2713,11 +2701,6 @@
                       return elem.contains(eventTarget_1);
                   });
                   if (lostFocus && isIgnored) {
-                      if (self.timeContainer !== undefined &&
-                          self.minuteElement !== undefined &&
-                          self.hourElement !== undefined) {
-                          updateTime();
-                      }
                       self.close();
                       if (self.config.mode === "range" && self.selectedDates.length === 1) {
                           self.clear(false);
@@ -2875,8 +2858,7 @@
                           e.preventDefault();
                           var delta = e.keyCode === 40 ? 1 : -1;
                           if ((self.daysContainer && e.target.$i !== undefined) ||
-                              e.target === self.input ||
-                              e.target === self.altInput) {
+                              e.target === self.input) {
                               if (e.ctrlKey) {
                                   e.stopPropagation();
                                   changeYear(self.currentYear - delta);
@@ -3140,7 +3122,7 @@
                   set: minMaxDateSetter("max")
               });
               var minMaxTimeSetter = function (type) { return function (val) {
-                  self.config[type === "min" ? "_minTime" : "_maxTime"] = self.parseDate(val, "H:i:S");
+                  self.config[type === "min" ? "_minTime" : "_maxTime"] = self.parseDate(val, "H:i");
               }; };
               Object.defineProperty(self.config, "minTime", {
                   get: function () { return self.config._minTime; },
@@ -3223,7 +3205,7 @@
                   (configPosHorizontal != null && configPosHorizontal === "center"
                       ? (calendarWidth - inputBounds.width) / 2
                       : 0);
-              var right = window.document.body.offsetWidth - (window.pageXOffset + inputBounds.right);
+              var right = window.document.body.offsetWidth - inputBounds.right;
               var rightMost = left + calendarWidth > window.document.body.offsetWidth;
               var centerMost = right + calendarWidth > window.document.body.offsetWidth;
               toggleClass(self.calendarContainer, "rightMost", rightMost);
@@ -3412,8 +3394,7 @@
                   return self.clear(triggerChange);
               setSelectedDate(date, format);
               self.showTimeInput = self.selectedDates.length > 0;
-              self.latestSelectedDateObj =
-                  self.selectedDates[self.selectedDates.length - 1];
+              self.latestSelectedDateObj = self.selectedDates[self.selectedDates.length - 1];
               self.redraw();
               jumpToDate();
               setHoursFromDate();
@@ -3611,8 +3592,7 @@
               self.yearElements.forEach(function (yearElement, i) {
                   var d = new Date(self.currentYear, self.currentMonth, 1);
                   d.setMonth(self.currentMonth + i);
-                  if (self.config.showMonths > 1 ||
-                      self.config.monthSelectorType === "static") {
+                  if (self.config.showMonths > 1) {
                       self.monthElements[i].textContent =
                           monthToStr(d.getMonth(), self.config.shorthandCurrentMonth, self.l10n) + " ";
                   }
@@ -6229,6 +6209,7 @@
     charAt: createMethod(true)
   };
 
+  var O = 'object';
   var check = function (it) {
     return it && it.Math == Math && it;
   };
@@ -6236,10 +6217,10 @@
   // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
   var global_1 =
     // eslint-disable-next-line no-undef
-    check(typeof globalThis == 'object' && globalThis) ||
-    check(typeof window == 'object' && window) ||
-    check(typeof self == 'object' && self) ||
-    check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
+    check(typeof globalThis == O && globalThis) ||
+    check(typeof window == O && window) ||
+    check(typeof self == O && self) ||
+    check(typeof commonjsGlobal == O && commonjsGlobal) ||
     // eslint-disable-next-line no-new-func
     Function('return this')();
 
@@ -6323,7 +6304,7 @@
     };
   };
 
-  var createNonEnumerableProperty = descriptors ? function (object, key, value) {
+  var hide = descriptors ? function (object, key, value) {
     return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
   } : function (object, key, value) {
     object[key] = value;
@@ -6332,47 +6313,36 @@
 
   var setGlobal = function (key, value) {
     try {
-      createNonEnumerableProperty(global_1, key, value);
+      hide(global_1, key, value);
     } catch (error) {
       global_1[key] = value;
     } return value;
   };
 
+  var shared = createCommonjsModule(function (module) {
   var SHARED = '__core-js_shared__';
   var store = global_1[SHARED] || setGlobal(SHARED, {});
 
-  var sharedStore = store;
+  (module.exports = function (key, value) {
+    return store[key] || (store[key] = value !== undefined ? value : {});
+  })('versions', []).push({
+    version: '3.1.3',
+    mode:  'global',
+    copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+  });
+  });
 
-  var functionToString = Function.toString;
-
-  // this helper broken in `3.4.1-3.4.4`, so we can't use `shared` helper
-  if (typeof sharedStore.inspectSource != 'function') {
-    sharedStore.inspectSource = function (it) {
-      return functionToString.call(it);
-    };
-  }
-
-  var inspectSource = sharedStore.inspectSource;
+  var functionToString = shared('native-function-to-string', Function.toString);
 
   var WeakMap = global_1.WeakMap;
 
-  var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(inspectSource(WeakMap));
+  var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(functionToString.call(WeakMap));
 
   var hasOwnProperty = {}.hasOwnProperty;
 
   var has = function (it, key) {
     return hasOwnProperty.call(it, key);
   };
-
-  var shared = createCommonjsModule(function (module) {
-  (module.exports = function (key, value) {
-    return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
-  })('versions', []).push({
-    version: '3.5.0',
-    mode:  'global',
-    copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
-  });
-  });
 
   var id = 0;
   var postfix = Math.random();
@@ -6406,25 +6376,25 @@
   };
 
   if (nativeWeakMap) {
-    var store$1 = new WeakMap$1();
-    var wmget = store$1.get;
-    var wmhas = store$1.has;
-    var wmset = store$1.set;
+    var store = new WeakMap$1();
+    var wmget = store.get;
+    var wmhas = store.has;
+    var wmset = store.set;
     set = function (it, metadata) {
-      wmset.call(store$1, it, metadata);
+      wmset.call(store, it, metadata);
       return metadata;
     };
     get = function (it) {
-      return wmget.call(store$1, it) || {};
+      return wmget.call(store, it) || {};
     };
     has$1 = function (it) {
-      return wmhas.call(store$1, it);
+      return wmhas.call(store, it);
     };
   } else {
     var STATE = sharedKey('state');
     hiddenKeys[STATE] = true;
     set = function (it, metadata) {
-      createNonEnumerableProperty(it, STATE, metadata);
+      hide(it, STATE, metadata);
       return metadata;
     };
     get = function (it) {
@@ -6505,14 +6475,18 @@
   var redefine = createCommonjsModule(function (module) {
   var getInternalState = internalState.get;
   var enforceInternalState = internalState.enforce;
-  var TEMPLATE = String(String).split('String');
+  var TEMPLATE = String(functionToString).split('toString');
+
+  shared('inspectSource', function (it) {
+    return functionToString.call(it);
+  });
 
   (module.exports = function (O, key, value, options) {
     var unsafe = options ? !!options.unsafe : false;
     var simple = options ? !!options.enumerable : false;
     var noTargetGet = options ? !!options.noTargetGet : false;
     if (typeof value == 'function') {
-      if (typeof key == 'string' && !has(value, 'name')) createNonEnumerableProperty(value, 'name', key);
+      if (typeof key == 'string' && !has(value, 'name')) hide(value, 'name', key);
       enforceInternalState(value).source = TEMPLATE.join(typeof key == 'string' ? key : '');
     }
     if (O === global_1) {
@@ -6525,10 +6499,10 @@
       simple = true;
     }
     if (simple) O[key] = value;
-    else createNonEnumerableProperty(O, key, value);
+    else hide(O, key, value);
   // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
   })(Function.prototype, 'toString', function toString() {
-    return typeof this == 'function' && getInternalState(this).source || inspectSource(this);
+    return typeof this == 'function' && getInternalState(this).source || functionToString.call(this);
   });
   });
 
@@ -6556,7 +6530,7 @@
 
   // Helper for a popular repeating case of the spec:
   // Let integer be ? ToInteger(index).
-  // If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
+  // If integer < 0, let result be max((length + integer), 0); else let result be min(length, length).
   var toAbsoluteIndex = function (index, length) {
     var integer = toInteger(index);
     return integer < 0 ? max(integer + length, 0) : min$1(integer, length);
@@ -6720,7 +6694,7 @@
       }
       // add a flag to not completely full polyfills
       if (options.sham || (targetProperty && targetProperty.sham)) {
-        createNonEnumerableProperty(sourceProperty, 'sham', true);
+        hide(sourceProperty, 'sham', true);
       }
       // extend global
       redefine(target, key, sourceProperty, options);
@@ -6758,21 +6732,12 @@
     return !String(Symbol());
   });
 
-  var useSymbolAsUid = nativeSymbol
-    // eslint-disable-next-line no-undef
-    && !Symbol.sham
-    // eslint-disable-next-line no-undef
-    && typeof Symbol() == 'symbol';
-
-  var WellKnownSymbolsStore = shared('wks');
   var Symbol$1 = global_1.Symbol;
-  var createWellKnownSymbol = useSymbolAsUid ? Symbol$1 : uid;
+  var store$1 = shared('wks');
 
   var wellKnownSymbol = function (name) {
-    if (!has(WellKnownSymbolsStore, name)) {
-      if (nativeSymbol && has(Symbol$1, name)) WellKnownSymbolsStore[name] = Symbol$1[name];
-      else WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
-    } return WellKnownSymbolsStore[name];
+    return store$1[name] || (store$1[name] = nativeSymbol && Symbol$1[name]
+      || (nativeSymbol ? Symbol$1 : uid)('Symbol.' + name));
   };
 
   var ITERATOR = wellKnownSymbol('iterator');
@@ -6797,9 +6762,7 @@
   if (IteratorPrototype == undefined) IteratorPrototype = {};
 
   // 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-  if ( !has(IteratorPrototype, ITERATOR)) {
-    createNonEnumerableProperty(IteratorPrototype, ITERATOR, returnThis);
-  }
+  if ( !has(IteratorPrototype, ITERATOR)) hide(IteratorPrototype, ITERATOR, returnThis);
 
   var iteratorsCore = {
     IteratorPrototype: IteratorPrototype,
@@ -6967,7 +6930,7 @@
           if (objectSetPrototypeOf) {
             objectSetPrototypeOf(CurrentIteratorPrototype, IteratorPrototype$2);
           } else if (typeof CurrentIteratorPrototype[ITERATOR$1] != 'function') {
-            createNonEnumerableProperty(CurrentIteratorPrototype, ITERATOR$1, returnThis$2);
+            hide(CurrentIteratorPrototype, ITERATOR$1, returnThis$2);
           }
         }
         // Set @@toStringTag to native iterators
@@ -6983,7 +6946,7 @@
 
     // define iterator
     if ( IterablePrototype[ITERATOR$1] !== defaultIterator) {
-      createNonEnumerableProperty(IterablePrototype, ITERATOR$1, defaultIterator);
+      hide(IterablePrototype, ITERATOR$1, defaultIterator);
     }
     iterators[NAME] = defaultIterator;
 
@@ -7089,13 +7052,6 @@
   };
 
   var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
-  var test = {};
-
-  test[TO_STRING_TAG$1] = 'z';
-
-  var toStringTagSupport = String(test) === '[object z]';
-
-  var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag');
   // ES3 wrong here
   var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
 
@@ -7107,11 +7063,11 @@
   };
 
   // getting tag from ES6+ `Object.prototype.toString`
-  var classof = toStringTagSupport ? classofRaw : function (it) {
+  var classof = function (it) {
     var O, tag, result;
     return it === undefined ? 'Undefined' : it === null ? 'Null'
       // @@toStringTag case
-      : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$2)) == 'string' ? tag
+      : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag
       // builtinTag case
       : CORRECT_ARGUMENTS ? classofRaw(O)
       // ES3 arguments fallback
@@ -7136,14 +7092,13 @@
     var mapping = mapfn !== undefined;
     var index = 0;
     var iteratorMethod = getIteratorMethod(O);
-    var length, result, step, iterator, next;
+    var length, result, step, iterator;
     if (mapping) mapfn = bindContext(mapfn, argumentsLength > 2 ? arguments[2] : undefined, 2);
     // if the target is not iterable or it's an array with the default iterator - use a simple case
     if (iteratorMethod != undefined && !(C == Array && isArrayIteratorMethod(iteratorMethod))) {
       iterator = iteratorMethod.call(O);
-      next = iterator.next;
       result = new C();
-      for (;!(step = next.call(iterator)).done; index++) {
+      for (;!(step = iterator.next()).done; index++) {
         createProperty(result, index, mapping
           ? callWithSafeIterationClosing(iterator, mapfn, [step.value, index], true)
           : step.value
